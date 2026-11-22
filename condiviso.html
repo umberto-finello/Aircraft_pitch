@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beccheggio dell’aereo: prova l’LQR</title>
+<style>
+:root{--bg:#eef3f6;--card:#ffffff;--ink:#14283a;--mute:#5b6f80;--line:#c9d6df;--resp:#0f7c80;--ref:#c98a00;--elev:#7a4fb0;--bad:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1b26;--card:#16273a;--ink:#e6eef5;--mute:#93a7b8;--line:#2d4256;--resp:#4fd1c5;--ref:#f2b84b;--elev:#b794f4;--bad:#ff8a80}}
+:root[data-theme="dark"]{--bg:#0f1b26;--card:#16273a;--ink:#e6eef5;--mute:#93a7b8;--line:#2d4256;--resp:#4fd1c5;--ref:#f2b84b;--elev:#b794f4;--bad:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:18px 16px 32px}
+h1{font:700 1.5rem/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:.95rem}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+svg#plane{width:100%;height:auto;display:block}
+canvas{width:100%;display:block}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--resp);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--resp)}
+.ctl{margin:10px 0}
+.ctl label{display:flex;justify-content:space-between;font-weight:600}
+.ctl output{font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;text-align:center}
+.stats b{display:block;font:700 1.25rem Georgia,serif;font-variant-numeric:tabular-nums}
+.stats span{font-size:.8rem;color:var(--mute)}
+.warn{color:var(--bad);font-size:.9rem;min-height:1.3em;margin:6px 0 0}
+.leg{font-size:.85rem;color:var(--mute);margin:4px 0 0}
+.leg i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
+small{color:var(--mute)}
+</style>
+</head>
+<body>
+<main>
+<h1>Beccheggio dell’aereo con LQR</h1>
+<p class="sub">Muovi p ed R e guarda come cambia la risposta al gradino. Il controllore viene ricalcolato a ogni movimento.</p>
+
+<div class="box">
+<svg id="plane" viewBox="0 0 400 170" role="img" aria-label="Aereo che beccheggia">
+<line x1="10" y1="85" x2="390" y2="85" stroke="var(--line)" stroke-dasharray="4 5"/>
+<g id="tgt" stroke="var(--ref)" stroke-dasharray="6 5" stroke-width="2"><line x1="40" y1="85" x2="360" y2="85"/></g>
+<g id="ac">
+<path d="M70 85 Q80 70 130 70 L290 76 Q340 82 340 88 Q340 94 290 96 L130 100 Q80 100 70 85Z" fill="var(--ink)" opacity=".92"/>
+<path d="M100 72 L82 38 L108 38 L135 71Z" fill="var(--ink)"/>
+<path d="M165 95 L225 118 L240 118 L215 92Z" fill="var(--mute)"/>
+<circle cx="305" cy="84" r="5" fill="var(--bg)"/>
+<g id="el" transform="translate(88 86)"><rect x="-34" y="-2.5" width="34" height="5" rx="2" fill="var(--elev)"/></g>
+</g>
+</svg>
+<div class="legrow leg"><i style="background:var(--ref)"></i>angolo richiesto &nbsp; <i style="background:var(--elev)"></i>equilibratore</div>
+</div>
+
+<div class="box">
+<canvas id="cth" data-h="170" aria-label="Angolo di beccheggio nel tempo"></canvas>
+<canvas id="cu" data-h="90" aria-label="Deflessione dell’equilibratore nel tempo"></canvas>
+<p class="leg"><i style="background:var(--resp)"></i>beccheggio θ (gradi) &nbsp; <i style="background:var(--elev)"></i>equilibratore δ (gradi)</p>
+<div class="row" style="margin-top:10px">
+<button id="pp">Pausa</button><button id="rs" class="alt">Riavvia</button>
+</div>
+<div class="ctl"><label for="ts">Tempo <output id="tout">0,0 s</output></label><input id="ts" type="range" min="0" max="10" step="0.01" value="0"></div>
+</div>
+
+<div class="box">
+<div class="ctl"><label for="ps">p (peso sull’errore di angolo) <output id="pout"></output></label><input id="ps" type="range" min="-1" max="2" step="0.01" value="0.602"></div>
+<div class="ctl"><label for="rs2">R (peso sullo sforzo di controllo) <output id="rout"></output></label><input id="rs2" type="range" min="-2" max="1" step="0.01" value="0"></div>
+<div class="ctl"><label for="ls">Limite equilibratore <output id="lout"></output></label><input id="ls" type="range" min="1" max="31" step="1" value="31"></div>
+<div class="row"><button id="rst" class="alt">Torna a p = 4, R = 1, senza limite</button></div>
+<p class="warn" id="warn"></p>
+</div>
+
+<div class="box stats">
+<div><b id="os">–</b><span>overshoot</span></div>
+<div><b id="rt">–</b><span>tempo di salita (10–90%)</span></div>
+<div><b id="st">–</b><span>assestamento (2%)</span></div>
+<div><b id="pk">–</b><span>equilibratore max</span></div>
+</div>
+<p class="sub"><small>Modello Aircraft Pitch (CTMS, Michigan), stati α, q, θ. Controllo u = −Kx + N̄·r, con Q = p·CᵀC. Gradino richiesto: 0,2 rad (11,5°).</small></p>
+</main>
+
+<script>
+const A=[[-0.313,56.7,0],[-0.0139,-0.426,0],[0,56.7,0]];
+const B=[0.232,0.0203,0];
+const REF=0.2, T=10, DT=0.01, N=Math.round(T/DT);
+const D=180/Math.PI;
+const fmt=(x,d=1)=>x.toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+function riccati(p,R){
+  let P=[[0,0,0],[0,0,0],[0,0,0]];
+  const f=P=>{
+    const PB=[0,0,0];
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)PB[i]+=P[i][j]*B[j];
+    const o=[[0,0,0],[0,0,0],[0,0,0]];
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+      let s=0;for(let k=0;k<3;k++)s+=A[k][i]*P[k][j]+P[i][k]*A[k][j];
+      o[i][j]=s-PB[i]*PB[j]/R+(i==2&&j==2?p:0);
+    }
+    return o;
+  };
+  const add=(P,Q,h)=>P.map((r,i)=>r.map((v,j)=>v+h*Q[i][j]));
+  const h=0.005;
+  for(let n=0;n<80000;n++){
+    const k1=f(P),k2=f(add(P,k1,h/2)),k3=f(add(P,k2,h/2)),k4=f(add(P,k3,h));
+    let m=0;
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+      const d=h/6*(k1[i][j]+2*k2[i][j]+2*k3[i][j]+k4[i][j]);
+      P[i][j]+=d;m=Math.max(m,Math.abs(d));
+    }
+    if(m<1e-11)break;
+  }
+  return [0,1,2].map(j=>(B[0]*P[0][j]+B[1]*P[1][j]+B[2]*P[2][j])/R);
+}
+function solve3(M,b){
+  const a=M.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<3;c++){
+    let m=c;for(let r=c+1;r<3;r++)if(Math.abs(a[r][c])>Math.abs(a[m][c]))m=r;
+    [a[c],a[m]]=[a[m],a[c]];
+    for(let r=0;r<3;r++)if(r!==c){const q=a[r][c]/a[c][c];for(let k=c;k<4;k++)a[r][k]-=q*a[c][k];}
+  }
+  return a.map((r,i)=>r[3]/r[i]);
+}
+function simulate(p,R,lim){
+  const K=riccati(p,R);
+  const Acl=A.map((r,i)=>r.map((v,j)=>v-B[i]*K[j]));
+  const y=solve3(Acl,B);
+  const Nbar=-1/y[2];
+  const u=x=>{
+    const v=-(K[0]*x[0]+K[1]*x[1]+K[2]*x[2])+Nbar*REF;
+    return Math.max(-lim,Math.min(lim,v));
+  };
+  const f=x=>{const v=u(x);return A.map((r,i)=>r[0]*x[0]+r[1]*x[1]+r[2]*x[2]+B[i]*v);};
+  let x=[0,0,0];const th=[],de=[];
+  for(let n=0;n<=N;n++){
+    th.push(x[2]);de.push(u(x));
+    const k1=f(x),k2=f(x.map((v,i)=>v+DT/2*k1[i])),k3=f(x.map((v,i)=>v+DT/2*k2[i])),k4=f(x.map((v,i)=>v+DT*k3[i]));
+    x=x.map((v,i)=>v+DT/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]));
+  }
+  return {th,de};
+}
+
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let sim,tNow=0,playing=true,last=null,limOn=false;
+
+function plot(cv,ys,ymin,ymax,color,refY,limY){
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=+cv.dataset.h;
+  cv.style.height=h+'px';cv.width=w*dpr;cv.height=h*dpr;
+  const c=cv.getContext('2d');c.scale(dpr,dpr);
+  const L=34,R=6,Tp=6,Bt=16,pw=w-L-R,ph=h-Tp-Bt;
+  const X=t=>L+t/T*pw,Y=v=>Tp+(1-(v-ymin)/(ymax-ymin))*ph;
+  c.font='11px system-ui';c.fillStyle=css('--mute');c.strokeStyle=css('--line');c.lineWidth=1;
+  const step=(ymax-ymin)>40?20:10;
+  for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step){c.beginPath();c.moveTo(L,Y(v));c.lineTo(w-R,Y(v));c.stroke();c.textAlign='right';c.fillText(v,L-4,Y(v)+4);}
+  c.textAlign='center';for(let t=0;t<=T;t+=2)c.fillText(t,X(t),h-3);
+  if(refY!=null){c.strokeStyle=css('--ref');c.setLineDash([6,4]);c.beginPath();c.moveTo(L,Y(refY));c.lineTo(w-R,Y(refY));c.stroke();c.setLineDash([]);}
+  if(limY!=null){c.strokeStyle=css('--bad');c.setLineDash([2,3]);for(const s of[1,-1]){c.beginPath();c.moveTo(L,Y(s*limY));c.lineTo(w-R,Y(s*limY));c.stroke();}c.setLineDash([]);}
+  c.strokeStyle=color;c.lineWidth=2.2;c.beginPath();
+  ys.forEach((v,i)=>{const px=X(i*DT),py=Y(v);i?c.lineTo(px,py):c.moveTo(px,py);});c.stroke();
+  const i=Math.min(N,Math.round(tNow/DT));
+  c.strokeStyle=css('--ink');c.lineWidth=1;c.beginPath();c.moveTo(X(tNow),Tp);c.lineTo(X(tNow),Tp+ph);c.stroke();
+  c.fillStyle=color;c.beginPath();c.arc(X(tNow),Y(ys[i]),4,0,7);c.fill();
+}
+function frame(){
+  const i=Math.min(N,Math.round(tNow/DT));
+  const th=sim.th[i]*D,de=sim.de[i]*D;
+  $('ac').setAttribute('transform',`rotate(${-th} 205 85)`);
+  $('el').setAttribute('transform',`translate(88 86) rotate(${de*0.9})`);
+  $('tgt').setAttribute('transform',`rotate(${-REF*D} 205 85)`);
+  $('ts').value=tNow;$('tout').textContent=fmt(tNow)+' s';
+  plot($('cth'),sim.th.map(v=>v*D),-5,25,css('--resp'),REF*D,null);
+  plot($('cu'),sim.de.map(v=>v*D),-35,35,css('--elev'),null,limOn?+$('ls').value:null);
+}
+function recompute(){
+  const p=Math.pow(10,+$('ps').value),R=Math.pow(10,+$('rs2').value);
+  limOn=+$('ls').value<31;const lim=limOn?+$('ls').value/D:Infinity;
+  $('pout').textContent=fmt(p,p<10?2:1);$('rout').textContent=fmt(R,R<1?2:1);
+  $('lout').textContent=limOn?'±'+$('ls').value+'°':'nessuno';
+  sim=simulate(p,R,lim);
+  const th=sim.th,fin=REF;
+  const os=Math.max(0,(Math.max(...th)-fin)/fin*100);
+  let st=0;for(let i=N;i>=0;i--){if(Math.abs(th[i]-fin)>0.02*fin){st=(i+1)*DT;break;}}
+  const pk=Math.max(...sim.de.map(Math.abs))*D;
+  $('os').textContent=fmt(os)+'%';
+  $('st').textContent=st>=T-0.05?'> 10 s':fmt(st)+' s';
+  $('pk').textContent=fmt(pk)+'°';
+  const i10=th.findIndex(v=>v>=0.1*fin),i90=th.findIndex(v=>v>=0.9*fin);
+  $('rt').textContent=(i10<0||i90<0)?'> 10 s':fmt((i90-i10)*DT,2)+' s';
+  let sat=0;if(limOn)sat=sim.de.filter(v=>Math.abs(v)>=lim-1e-6).length*DT;
+  $('warn').textContent=sat>0?'L’equilibratore resta al limite per '+fmt(sat)+' s: il controllore non può fare quello che chiede.':'';
+  frame();
+}
+function tick(ts){
+  if(last!=null&&playing){tNow+=(ts-last)/1000;if(tNow>T+1)tNow=0;if(tNow>T)tNow=T;}
+  last=ts;if(playing)frame();requestAnimationFrame(tick);
+}
+$('pp').onclick=()=>{playing=!playing;$('pp').textContent=playing?'Pausa':'Riprendi';};
+$('rs').onclick=()=>{tNow=0;playing=true;$('pp').textContent='Pausa';frame();};
+$('ts').oninput=e=>{tNow=+e.target.value;frame();};
+['ps','rs2','ls'].forEach(id=>$(id).oninput=()=>{tNow=0;recompute();});
+$('rst').onclick=()=>{$('ps').value=0.602;$('rs2').value=0;$('ls').value=31;tNow=0;recompute();};
+window.addEventListener('resize',frame);
+recompute();requestAnimationFrame(tick);
+</script>
+</body>
+</html>
