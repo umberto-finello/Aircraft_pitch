@@ -1,10 +1,4 @@
 function a2_confronto_pR
-% ANIM_CONFRONTO_PR  Quattro aerei "fantasma" sovrapposti e semitrasparenti,
-% ciascuno con una coppia (p, R) diversa, che inseguono lo stesso riferimento
-% di 0.2 rad. A destra theta(t) e delta(t) dei quattro progetti.
-% Controlli nella finestra: Pausa/Riprendi, Riavvia, slider del tempo.
-%
-% Richiede anima.m, crea_aereo.m e muovi_aereo.m nella stessa cartella.
 
 %% Modello
 A = [-0.313 56.7 0; -0.0139 -0.426 0; 0 56.7 0];
@@ -78,9 +72,6 @@ for k = 1:N
     plot(axT,t,th_deg(:,k),'Color',chiari(k,:),'LineWidth',1);
     plot(axD,t,de_deg(:,k),'Color',chiari(k,:),'LineWidth',1);
 end
-%yline(axT,rad2deg(r),'--k');
-%yline(axD, delta_lim,'--','Color',[0.5 0.5 0.5]);
-%yline(axD,-delta_lim,'--','Color',[0.5 0.5 0.5]);
 hR = yline(axT,rad2deg(r),'--k');
 hL = yline(axD, delta_lim,'--','Color',[0.5 0.5 0.5]);
 yline(axD,-delta_lim,'--','Color',[0.5 0.5 0.5]);
@@ -96,23 +87,8 @@ ylim(axD,[min(-1.2*delta_lim, min(de_deg(:))*1.1), max(de_deg(:))*1.1]);
 ylabel(axT,'\theta (°)');
 xlabel(axD,'Tempo (s)'); ylabel(axD,'\delta (°)');
 title(axT,'Angolo di beccheggio');
-%legend(axT,hT,nomi,'Location','southeast','FontSize',8);
-%legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',8);
-%legend(axD,[hD hL],[nomi {sprintf('Limiti elevatore (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',8);
-
-%lgT = legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',8);
-%lgD = legend(axD,[hD hL],[nomi {sprintf('Limiti elevatore (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',8);
-lgT = legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',8);
-lgD = legend(axD,[hD hL],[nomi {sprintf('Limiti (\\pm%g°)',delta_lim)}], ...
-    'Location','northeast','FontSize',8);
-
-drawnow;                                   % MATLAB calcola la dimensione delle legende qui
-set([lgT lgD],'Units','normalized');
-pT = get(lgT,'Position');
-pD = get(lgD,'Position');
-w  = max(pT(3),pD(3));                     % larghezza della legenda più larga
-set(lgT,'Position',[pT(1)+pT(3)-w, pT(2), w, pT(4)]);
-set(lgD,'Position',[pD(1)+pD(3)-w, pD(2), w, pD(4)]);
+legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',9);
+legend(axD,[hD hL],[nomi {sprintf('Limiti (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',9);
 
 if clip_disegno
     title(axD,{sprintf('Deflessione elevatore')});

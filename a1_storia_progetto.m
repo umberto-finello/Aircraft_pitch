@@ -1,15 +1,4 @@
 function a1_storia_progetto
-% ANIM_STORIA_PROGETTO  La "storia del progetto" in quattro aerei affiancati,
-% tutti con lo stesso riferimento di 0.2 rad:
-%   1) circuito aperto: equilibratore fisso a delta = 0.2 rad (come il grafico
-%      di modello_e_analisi.m, dove 0.2 e' l'ingresso del gradino)
-%   2) circuito chiuso con controllore C(s) = 1       (delta = r - theta)
-%   3) LQR senza precompensatore                      (delta = r - K x)
-%   4) LQR con precompensatore Nbar                   (delta = Nbar r - K x)
-% In basso: theta(t) e delta(t) dei quattro casi.
-% Controlli nella finestra: Pausa/Riprendi, Riavvia, slider del tempo.
-%
-% Richiede anima.m, crea_aereo.m e muovi_aereo.m nella stessa cartella.
 
 %% Modello e controllore LQR
 A = [-0.313 56.7 0; -0.0139 -0.426 0; 0 56.7 0];
@@ -28,7 +17,7 @@ T            = 15;               % durata (s) (il circuito chiuso con C=1 e' len
 dt           = 0.05;             % passo dei fotogrammi (s)
 velocita     = 1;                % 1 = tempo reale, 2 = doppia velocita', ...
 delta_lim    = 23;               % limite indicativo dell'equilibratore [gradi]
-clip_disegno = false;            % true: la sagoma disegna delta al massimo a +-delta_lim, false: dà l'angolo teorico
+clip_disegno = false;             % true: la sagoma disegna delta al massimo a +-delta_lim
                                  %       (i grafici mostrano sempre il valore vero)
 file_video   = '';               % es. 'storia_progetto.mp4' per registrare un video
 

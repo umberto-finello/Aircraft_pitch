@@ -1,13 +1,4 @@
 function a3_saturazione
-% ANIM_SATURAZIONE  Cosa succede se l'elevatore non puo' deflettere quanto
-% chiede l'LQR? Tre aerei con lo stesso riferimento di 0.2 rad:
-%   a) p alto, controllore ideale (lineare, delta senza limiti)
-%   b) p alto, elevatore limitato a +-delta_lim
-%   c) p basso, elevatore limitato a +-delta_lim (il limite non viene raggiunto)
-% La legge di controllo e' sempre delta = sat( Nbar r - K x ).
-% Controlli nella finestra: Pausa/Riprendi, Riavvia, slider del tempo.
-%
-% Richiede anima.m, crea_aereo.m e muovi_aereo.m nella stessa cartella.
 
 %% Modello
 A = [-0.313 56.7 0; -0.0139 -0.426 0; 0 56.7 0];
@@ -82,9 +73,7 @@ for k = 1:3
     plot(axT,t,th_deg(:,k),'Color',0.5*colori(k,:)+0.5,'LineWidth',1);
     plot(axD,t,de_deg(:,k),'Color',0.5*colori(k,:)+0.5,'LineWidth',1);
 end
-%yline(axT,rad2deg(r),'--k');
 hR = yline(axT,rad2deg(r),'--k','LineWidth',1);
-%yline(axD, delta_lim,'--','Color',[0.5 0.5 0.5]);
 hL = yline(axD, delta_lim,'--','Color',[0.5 0.5 0.5]);
 yline(axD,-delta_lim,'--','Color',[0.5 0.5 0.5]);
 for k = 1:3
@@ -100,8 +89,8 @@ xlabel(axT,'Tempo (s)'); ylabel(axT,'\theta (°)');
 xlabel(axD,'Tempo (s)'); ylabel(axD,'\delta (°)');
 title(axD,sprintf('Deflessione elevatore'));
 %legend(axT,hT,nomi,'Location','southeast','FontSize',8);
-legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',8);
-legend(axD,[hD hL],[nomi {sprintf('Limiti elevatore (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',8);
+legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',9);
+legend(axD,[hD hL],[nomi {sprintf('Limiti elevatore (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',9);
 
 %% Animazione con controlli
 anima(fig,@aggiorna,n,dt/velocita,@(f) sprintf('t = %.2f s',t(f)),file_video);
