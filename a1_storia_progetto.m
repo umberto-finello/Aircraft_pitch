@@ -28,7 +28,7 @@ T            = 15;               % durata (s) (il circuito chiuso con C=1 e' len
 dt           = 0.05;             % passo dei fotogrammi (s)
 velocita     = 1;                % 1 = tempo reale, 2 = doppia velocita', ...
 delta_lim    = 23;               % limite indicativo dell'equilibratore [gradi]
-clip_disegno = true;             % true: la sagoma disegna delta al massimo a +-delta_lim
+clip_disegno = false;            % true: la sagoma disegna delta al massimo a +-delta_lim, false: dà l'angolo teorico
                                  %       (i grafici mostrano sempre il valore vero)
 file_video   = '';               % es. 'storia_progetto.mp4' per registrare un video
 
