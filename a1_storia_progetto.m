@@ -95,11 +95,11 @@ ylim(axD,[min(-1.2*delta_lim, min(de_deg(:))*1.1), max(de_deg(:))*1.1]);
 xlabel(axT,'Tempo (s)'); ylabel(axT,'\theta (°)');
 xlabel(axD,'Tempo (s)'); ylabel(axD,'\delta (°)');
 legend(axT, [hT hR], [nomi, {sprintf('Riferimento')}], 'Location','northwest','FontSize',9);
-legend(axD, [hD hL], [nomi, {sprintf('Limiti elevatore (\\pm%i°)', delta_lim)}], 'Location','northeast','FontSize',9);
+legend(axD, [hD hL], [nomi, {sprintf('Limiti equilibratore (\\pm%i°)', delta_lim)}], 'Location','northeast','FontSize',9);
 if clip_disegno
-    title(axD,{sprintf('Deflessione elevatore',delta_lim)});
+    title(axD,{sprintf('Deflessione equilibratore',delta_lim)});
 else
-    title(axD,sprintf('Deflessione elevatore (limiti indicativi \\pm%i°)',delta_lim));
+    title(axD,sprintf('Deflessione equilibratore (limiti indicativi \\pm%i°)',delta_lim));
 end
 
 %% Animazione con controlli

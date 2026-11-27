@@ -13,7 +13,7 @@ r          = 0.2;        % riferimento [rad]
 T          = 6;          % durata (s)
 dt         = 0.04;       % passo dei fotogrammi (s)
 velocita   = 1;
-delta_lim  = 23;         % limite indicativo dell'elevatore (°)
+delta_lim  = 23;         % limite indicativo dell'equilibratore (°)
 file_video = '';         % es. 'saturazione.mp4' per registrare un video
 
 lim = deg2rad(delta_lim);
@@ -34,11 +34,11 @@ de_all = [de_a de_b de_c];
 th_deg = rad2deg(th_all);
 de_deg = rad2deg(de_all);
 
-nomi = {sprintf('p = %g, elevatore ideale',p_alto), ...
-        sprintf('p = %g, elevatore reale',p_alto), ...
-        sprintf('p = %g, elevatore reale',p_basso)};
+nomi = {sprintf('p = %g, equilibratore ideale',p_alto), ...
+        sprintf('p = %g, equilibratore reale',p_alto), ...
+        sprintf('p = %g, equilibratore reale',p_basso)};
 
-fprintf('\nTempo con elevatore a fondo corsa (+-%g°):\n',delta_lim);
+fprintf('\nTempo con equilibratore a fondo corsa (+-%g°):\n',delta_lim);
 fprintf('  b) p = %g: %.2f s\n', p_alto,  sum(abs(de_b) >= lim-1e-6)*dt);
 fprintf('  c) p = %g: %.2f s\n', p_basso, sum(abs(de_c) >= lim-1e-6)*dt);
 fprintf('Picco richiesto dal controllore ideale con p = %g: %.1f°\n', p_alto, rad2deg(max(abs(de_a))));
@@ -87,10 +87,10 @@ ylim(axT,[min(0,min(th_deg(:)))-1, max(th_deg(:))*1.1]);
 ylim(axD,[min(-1.2*delta_lim, min(de_deg(:))*1.1), max(de_deg(:))*1.1]);
 xlabel(axT,'Tempo (s)'); ylabel(axT,'\theta (°)');
 xlabel(axD,'Tempo (s)'); ylabel(axD,'\delta (°)');
-title(axD,sprintf('Deflessione elevatore'));
+title(axD,sprintf('Deflessione equilibratore'));
 %legend(axT,hT,nomi,'Location','southeast','FontSize',8);
 legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',9);
-legend(axD,[hD hL],[nomi {sprintf('Limiti elevatore (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',9);
+legend(axD,[hD hL],[nomi {sprintf('Limiti equilibratore (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',9);
 
 %% Animazione con controlli
 anima(fig,@aggiorna,n,dt/velocita,@(f) sprintf('t = %.2f s',t(f)),file_video);

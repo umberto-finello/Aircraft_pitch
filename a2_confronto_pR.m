@@ -12,8 +12,8 @@ r            = 0.2;      % riferimento [rad]
 T            = 3;        % durata (s)
 dt           = 0.03;     % passo dei fotogrammi (s)
 velocita     = 0.5;      % 0.5 = rallentatore (le risposte durano circa 1 s)
-delta_lim    = 23;       % limite indicativo dell'elevatore (°)
-clip_disegno = true;     % true: la sagoma disegna delta al massimo a +-delta_lim
+delta_lim    = 23;       % limite indicativo dell'equilibratore (°)
+clip_disegno = false;     % true: la sagoma disegna delta al massimo a +-delta_lim
 file_video   = '';       % es. 'confronto_pR.mp4' per registrare un video
 
 switch modo                      % ogni riga = [p R]
@@ -91,9 +91,9 @@ legend(axT,[hT hR],[nomi {'Riferimento'}],'Location','southeast','FontSize',9);
 legend(axD,[hD hL],[nomi {sprintf('Limiti (\\pm%g°)',delta_lim)}], 'Location','northeast','FontSize',9);
 
 if clip_disegno
-    title(axD,{sprintf('Deflessione elevatore')});
+    title(axD,{sprintf('Deflessione equilibratore')});
 else
-    title(axD,sprintf('Deflessione elevatore'));
+    title(axD,sprintf('Deflessione equilibratore'));
 end
 
 %% Animazione con controlli
