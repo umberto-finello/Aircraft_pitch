@@ -19,8 +19,7 @@ Q = p*(C'*C);
 R = 1;
 K = lqr(A,B,Q,R);
 sist_cc_lqr = ss(A-B*K, B, C, D);            % sistema circuito chiuso con LQR
-plot(t, (step(r*sist_cc_lqr,t)), 'LineWidth', 1.3); grid on; title('Circuito chiuso con LQR (p=50)'); xlabel('Tempo (s)'); ylabel('\theta (°)');
-
+plot(t, (step(r*sist_cc_lqr,t)), 'r', 'LineWidth', 1.3); grid on; title('Closed loop con LQR (p=50)'); xlabel('Tempo (s)'); ylabel('\theta (°)');
 
 % Questi comandi permettono di ottenere rise time, settling time e overshoot
 info = stepinfo(r*sist_cc_lqr);
@@ -41,7 +40,7 @@ err_regime_lqr_Nbar = abs((r-thetaf_Nbar)/r*100);
 fprintf('\nRequisiti di progettazione:\n- overshoot < 10%%\n- tempo di salita < 2s\n- tempo di assestamento < 10s\n- errore a regime < 2%%\n\n')
 fprintf('Con p = %i e R = %i ho:\n- overshoot = %.2f%%\n- tempo di salita = %.4fs\n- tempo di assestamento = %.4fs\n- errore a regime = %.2d%%\n ', p, R, overshoot, rise_time, settling_time, err_regime_lqr_Nbar)
 
-figure; plot(t, (step(r*sist_cc_lqr,t)), 'r', t, step(r*sist_cc_lqr_Nbar,t), 'b', t, r*ones(size(t)), 'k--', 'LineWidth', 1.3); grid on; title('Circuito chiuso (dopo LQR) con e senza Nbar (p = 50)'); xlabel('Tempo (s)'); ylabel('\theta (°)'); legend('Circuito chiuso con LQR', 'Circuito chiuso con LQR e Nbar', 'Riferimento');
+figure; plot(t, (step(r*sist_cc_lqr,t)), 'r', t, step(r*sist_cc_lqr_Nbar,t), 'b', t, r*ones(size(t)), 'k--', 'LineWidth', 1.3); grid on; title('Closed loop (con LQR) con e senza Nbar (p = 50)'); xlabel('Tempo (s)'); ylabel('\theta (°)'); legend('Closed loop con LQR', 'Closed loop con LQR e Nbar', 'Riferimento');
 
 % figure; step(r*sist_cc_Nbar); grid on; ylabel('angolo di beccheggio (°)'); title('CC con LQR e Nbar (p=50)');
 
@@ -151,7 +150,7 @@ Rv  = [0.05 1];
 col  = lines(numel(pv));      % un colore per ogni p
 stile = {'-', '--'};          % uno stile per ogni R
 
-figure('Name','Variazione di p e di R');
+figure('Name','Variazione di p e R');
 fprintf('\n------------------ LQR al variare di p ed R (con Nbar) ------------------\n');
 fprintf('%6s %6s %12s %14s %15s %10s %13s\n', 'p','R','Overshoot[%]','t salita(s)','t assest.(s)','Errore[%]','max|delta|(°)');
 
@@ -182,7 +181,7 @@ hR1 = plot(NaN, NaN, stile{1}, 'Color', 'k', 'LineWidth', 1.3);
 hR2 = plot(NaN, NaN, stile{2}, 'Color', 'k', 'LineWidth', 1.3);
 hr  = plot([t(1) t(end)], [r r], 'k:', 'LineWidth', 1);             % da togliere per non avere il riferimento
 grid on; ylabel('\theta (°)');
-title('Variazione mista di p e di R')
+title('Variazione simultanea di p e R')
 legend([hp1 hp2 hR1 hR2 hr], 'p = 4', 'p = 50', 'R = 0.1', 'R = 1', 'Riferimento', 'Location', 'southeast')   % da togliere per non avere il riferimento
 % legend([hp1 hp2 hR1 hR2], 'p = 4', 'p = 50', 'R = 0.1', 'R = 1', 'Location', 'southeast')   % da mettere per non avere il riferimento
 
